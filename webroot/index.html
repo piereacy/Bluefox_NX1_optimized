@@ -381,8 +381,8 @@
         <!-- TCP Algo Toggle -->
         <div class="card" onclick="document.getElementById('toggle_bbr').click()">
             <div class="card-content">
-                <h3 class="card-title">BBR 鎶㈠崰妯″紡 <span class="algo-status" id="current_algo_text"></span></h3>       
-                <p class="card-desc">寮€开启为 BBR，关闭即回退为温和的 Cubic 算法。切换后需重新开关一次手机热点方可全局生效。</p>
+                <h3 class="card-title">BBR 抢占模式 <span class="algo-status" id="current_algo_text"></span></h3>
+                <p class="card-desc">开启为 BBR，关闭即回退为温和的 Cubic 算法。切换后需重新开关一次手机热点方可全局生效。</p>
             </div>
             <label class="switch" onclick="event.stopPropagation()">
                 <input type="checkbox" id="toggle_bbr" data-flag="enable_bbr">
@@ -406,7 +406,7 @@
         <div class="card card-stack">
             <div class="card-content" style="padding-right:0;">
                 <h3 class="card-title">GPU 白名单权限</h3>
-                <p class="card-desc">像系统权限设置一样，给应用打勾即可加入高性能白名单，取消勾选即移除。</p>
+                <p class="card-desc">勾选应用使其加入白名单，取消勾选即移除。</p>
                 <p class="status-text" id="gpu_whitelist_summary"></p>
                 <p class="status-text" id="gpu_whitelist_status"></p>
 
