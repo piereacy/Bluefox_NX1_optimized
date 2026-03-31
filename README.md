@@ -57,12 +57,12 @@ Bluefox_NX1_optimized/
 
 ### 方式 A：KernelSU 管理器直接刷入
 
-1. 准备模块 zip。
+1. 从 release 下载模块 zip。
 2. 在 KernelSU 管理器中安装模块。
 3. 重启设备。
 4. 进入模块的 WebUI 页面进行开关配置。
 
-### 方式 B：Biuld and Push（build.bat）
+### 方式 B：Build and Push（build.bat）
 
 build.bat 执行流程：
 
