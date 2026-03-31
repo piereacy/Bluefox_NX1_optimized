@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>蓝狐网络中继优化</title>
+    <style>
+        :root {
+            --md-sys-color-primary: #006493;
+            --md-sys-color-on-primary: #ffffff;
+            --md-sys-color-primary-container: #cae6ff;
+            --md-sys-color-on-primary-container: #001e30;
+            --md-sys-color-surface: #fbfcff;
+            --md-sys-color-on-surface: #191c1e;
+            --md-sys-color-surface-variant: #dfe2e7;
+            --md-sys-color-on-surface-variant: #43474e;
+            --md-sys-color-outline: #73777f;
+            --md-sys-color-background: #fbfcff;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --md-sys-color-primary: #8dcdff;
+                --md-sys-color-on-primary: #00344f;
+                --md-sys-color-primary-container: #004b70;
+                --md-sys-color-on-primary-container: #cae6ff;
+                --md-sys-color-surface: #191c1e;
+                --md-sys-color-on-surface: #e2e2e6;
+                --md-sys-color-surface-variant: #43474e;
+                --md-sys-color-on-surface-variant: #c3c6cf;
+                --md-sys-color-outline: #8d9199;
+                --md-sys-color-background: #191c1e;
+            }
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--md-sys-color-background);
+            color: var(--md-sys-color-on-surface);
+            font-family: Roboto, system-ui, -apple-system, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .header {
+            padding: 24px 16px 16px;
+            background-color: var(--md-sys-color-surface);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            border-bottom: 1px solid var(--md-sys-color-surface-variant);
+        }
+
+        .title {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 500;
+            line-height: 32px;
+        }
+
+        .subtitle {
+            margin: 4px 0 0;
+            font-size: 14px;
+            color: var(--md-sys-color-outline);
+        }
+
+        .container {
+            padding: 16px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background-color: var(--md-sys-color-surface);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-content {
+            flex: 1;
+            padding-right: 16px;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 500;
+            margin: 0 0 4px 0;
+            color: var(--md-sys-color-on-surface);
+        }
+
+        .card-desc {
+            font-size: 14px;
+            color: var(--md-sys-color-on-surface-variant);
+            margin: 0;
+            line-height: 1.4;
+        }
+
+        /* Material 3 Toggle Switch */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 52px;
+            height: 32px;
+            flex-shrink: 0;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--md-sys-color-surface-variant);
+            transition: .4s cubic-bezier(0.2, 0, 0, 1);
+            border-radius: 32px;
+            border: 2px solid var(--md-sys-color-outline);
+            box-sizing: border-box;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 6px;
+            bottom: 6px;
+            background-color: var(--md-sys-color-outline);
+            transition: .4s cubic-bezier(0.2, 0, 0, 1);
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--md-sys-color-primary);
+            border-color: var(--md-sys-color-primary);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(20px);
+            background-color: var(--md-sys-color-on-primary);
+            height: 24px;
+            width: 24px;
+            left: 6px;
+            bottom: 2px;
+        }
+
+        input:active + .slider:before {
+            width: 28px;
+        }
+
+        /* 算法分段选择器样式 */
+        .segmented-btn-group {
+            display: flex;
+            margin-top: 12px;
+            background-color: var(--md-sys-color-surface-variant);
+            border-radius: 20px;
+            overflow: hidden;
+            border: 1px solid var(--md-sys-color-outline);
+        }
+
+        .seg-btn {
+            flex: 1;
+            padding: 10px 0;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--md-sys-color-on-surface-variant);
+            cursor: pointer;
+            transition: 0.3s background-color;
+            border: none;
+            background: transparent;
+        }
+
+        .seg-btn.active {
+            background-color: var(--md-sys-color-primary);
+            color: var(--md-sys-color-on-primary);
+        }
+        
+        .algo-status {
+            font-size: 13px;
+            font-weight: bold;
+            color: var(--md-sys-color-primary);
+            margin-left: 8px;
+        }
+        
+        .loading-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.3);
+            display: none;
+            z-index: 100;
+        }
+
+        .card-stack {
+            display: block;
+        }
+
+        .status-text {
+            min-height: 18px;
+            margin: 10px 0 0;
+            font-size: 12px;
+            color: var(--md-sys-color-on-surface-variant);
+        }
+
+        .status-text.error {
+            color: #b3261e;
+        }
+
+        .whitelist-toolbar,
+        .actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+
+        .text-input {
+            flex: 1;
+            min-width: 180px;
+            border: 1px solid var(--md-sys-color-outline);
+            border-radius: 12px;
+            padding: 10px 12px;
+            font-size: 14px;
+            box-sizing: border-box;
+            background-color: var(--md-sys-color-surface);
+            color: var(--md-sys-color-on-surface);
+        }
+
+        .btn {
+            border: 1px solid var(--md-sys-color-outline);
+            border-radius: 12px;
+            padding: 10px 12px;
+            font-size: 14px;
+            cursor: pointer;
+            background-color: var(--md-sys-color-surface);
+            color: var(--md-sys-color-on-surface);
+        }
+
+        .btn.primary {
+            background-color: var(--md-sys-color-primary);
+            color: var(--md-sys-color-on-primary);
+            border-color: var(--md-sys-color-primary);
+        }
+
+        .app-list {
+            width: 100%;
+            margin-top: 10px;
+            border: 1px solid var(--md-sys-color-outline);
+            border-radius: 12px;
+            background-color: var(--md-sys-color-surface);
+            overflow: auto;
+            max-height: 360px;
+        }
+
+        .app-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 12px;
+            border-bottom: 1px solid var(--md-sys-color-surface-variant);
+            cursor: pointer;
+        }
+
+        .app-row:last-child {
+            border-bottom: none;
+        }
+
+        .app-main {
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .app-name {
+            font-size: 14px;
+            color: var(--md-sys-color-on-surface);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 340px;
+        }
+
+        .app-id {
+            font-size: 12px;
+            color: var(--md-sys-color-on-surface-variant);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 340px;
+        }
+
+        .app-check {
+            width: 20px;
+            height: 20px;
+            accent-color: var(--md-sys-color-primary);
+            flex-shrink: 0;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1 class="title">网络中继优化</h1>
+        <p class="subtitle">v1.2</p>
+    </div>
+
+    <div class="container">
+        <!-- Backlog Toggle -->
+        <div class="card" onclick="document.getElementById('toggle_backlog').click()">
+            <div class="card-content">
+                <h3 class="card-title">Backlog 4096</h3>
+                <p class="card-desc">TCP并发列队优化，解决中继多设备高并发网络阻塞</p>
+            </div>
+            <label class="switch" onclick="event.stopPropagation()">
+                <input type="checkbox" id="toggle_backlog" data-flag="enable_backlog">
+                <span class="slider"></span>
+            </label>
+        </div>
+
+        <!-- Awake Toggle -->
+        <div class="card" onclick="document.getElementById('toggle_awake').click()">
+            <div class="card-content">
+                <h3 class="card-title">Awake 休眠锁</h3>
+                <p class="card-desc">防止手机息屏后 Wi-Fi 芯片进入低功耗导致断流降速</p>
+            </div>
+            <label class="switch" onclick="event.stopPropagation()">
+                <input type="checkbox" id="toggle_awake" data-flag="enable_awake">
+                <span class="slider"></span>
+            </label>
+        </div>
+
+        <!-- ZeroScan Toggle -->
+        <div class="card" onclick="document.getElementById('toggle_zeroscan').click()">
+            <div class="card-content">
+                <h3 class="card-title">ZeroScan 零扫描</h3>
+                <p class="card-desc">禁用 Wi-Fi 后台扫描，杜绝中继网络周期性跳Ping与卡顿</p>
+            </div>
+            <label class="switch" onclick="event.stopPropagation()">
+                <input type="checkbox" id="toggle_zeroscan" data-flag="enable_zeroscan">
+                <span class="slider"></span>
+            </label>
+        </div>
+
+        <!-- Proxy Toggle -->
+        <div class="card" onclick="document.getElementById('toggle_proxy').click()">
+            <div class="card-content">
+                <h3 class="card-title">代理接管 (Tethering)</h3>
+                <p class="card-desc">强制热点流量通过本地 VPN/代理接口，实现无感翻墙加速</p>
+            </div>
+            <label class="switch" onclick="event.stopPropagation()">
+                <input type="checkbox" id="toggle_proxy" data-flag="enable_proxy">
+                <span class="slider"></span>
+            </label>
+        </div>
+
+        <!-- DNS Purify Toggle -->
+        <div class="card" onclick="document.getElementById('toggle_dns').click()">
+            <div class="card-content">
+                <h3 class="card-title">DNS 净化劫持</h3>
+                <p class="card-desc">拦截中继设备 53 端口，强制重定向至阿里纯净 DNS 防污染</p>
+            </div>
+            <label class="switch" onclick="event.stopPropagation()">
+                <input type="checkbox" id="toggle_dns" data-flag="enable_dns">
+                <span class="slider"></span>
+            </label>
+        </div>
+
+        <!-- TCP Algo Toggle -->
+        <div class="card" onclick="document.getElementById('toggle_bbr').click()">
+            <div class="card-content">
+                <h3 class="card-title">BBR 鎶㈠崰妯″紡 <span class="algo-status" id="current_algo_text"></span></h3>       
+                <p class="card-desc">寮€开启为 BBR，关闭即回退为温和的 Cubic 算法。切换后需重新开关一次手机热点方可全局生效。</p>
+            </div>
+            <label class="switch" onclick="event.stopPropagation()">
+                <input type="checkbox" id="toggle_bbr" data-flag="enable_bbr">
+                <span class="slider"></span>
+            </label>
+        </div>
+
+        <!-- GPU Unlock Toggle -->
+        <div class="card" onclick="document.getElementById('toggle_gpu_unlock').click()">
+            <div class="card-content">
+                <h3 class="card-title">GPU 脱僵白名单 (防掉帧) <span class="algo-status" style="color:red;" id="current_gpu_text"></span></h3>
+                <p class="card-desc">剥夺原生傀儡调度器(Dummy)，拦截PPM联发科温控微操。采用白名单智能激活机制，无白名单应用运行时自动沉睡回省电状态。不超频，最高极值重置为900M，稳帧防黑砖。</p>
+            </div>
+            <label class="switch" onclick="event.stopPropagation()">
+                <input type="checkbox" id="toggle_gpu_unlock" data-flag="enable_gpu_unlock">
+                <span class="slider"></span>
+            </label>
+        </div>
+
+        <!-- GPU Whitelist Manager -->
+        <div class="card card-stack">
+            <div class="card-content" style="padding-right:0;">
+                <h3 class="card-title">GPU 白名单权限</h3>
+                <p class="card-desc">像系统权限设置一样，给应用打勾即可加入高性能白名单，取消勾选即移除。</p>
+                <p class="status-text" id="gpu_whitelist_summary"></p>
+                <p class="status-text" id="gpu_whitelist_status"></p>
+
+                <div class="whitelist-toolbar">
+                    <input type="text" class="text-input" id="app_search" placeholder="搜索应用名称">
+                    <button type="button" class="btn" id="btn_refresh_apps">刷新应用列表</button>
+                </div>
+
+                <div id="app_permission_list" class="app-list"></div>
+
+                <div class="actions">
+                    <button type="button" class="btn primary" id="btn_save_whitelist">手动保存并立即生效</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="loading-overlay" id="loading"></div>
+
+    <script>
+        const MOD_DIR = '/data/adb/modules/Bluefox_NX1_optimized';
+        const CONF_DIR = `${MOD_DIR}/conf`;
+        const GPU_WHITELIST_FILE = `${CONF_DIR}/gpu_whitelist.txt`;
+        const DEFAULT_GPU_WHITELIST = [
+            'com.tencent.tmgp.roco',
+            'com.tencent.tmgp.sgame',
+            'com.miHoYo.Yuanshen'
+        ];
+        const APP_NAME_HINTS = {
+            'com.tencent.tmgp.roco': '洛克王国：世界',
+            'com.tencent.tmgp.sgame': '王者荣耀',
+            'com.miHoYo.Yuanshen': '原神'
+        };
+
+        let installedApps = [];
+        let gpuWhitelist = [...DEFAULT_GPU_WHITELIST];
+
+        // 简易内核执行封装与 API 兼容层
+        async function runShell(cmd) {
+            try {
+                if (typeof window.ksu !== 'undefined' && window.ksu.exec) {
+                    let res = await window.ksu.exec(cmd);
+
+                    // 兼容 KernelSU 旧版返回 JSON 字符串的场景
+                    if (typeof res === 'string') {
+                        try {
+                            res = JSON.parse(res);
+                        } catch (e) {
+                            res = { errno: 0, stdout: res, stderr: '' };
+                        }
+                    }
+                    return res || { errno: 0, stdout: '', stderr: '' };
+                }
+                console.warn('无 KernelSU 环境, 模拟执行:', cmd);
+                return { errno: 0, stdout: 'OFF', stderr: '' };
+            } catch (err) {
+                console.error('执行出错:', err);
+                return { errno: -1, stdout: '', stderr: err.toString() };
+            }
+        }
+
+        function normalizePackageList(raw) {
+            return (raw || '')
+                .split(/\r?\n/)
+                .map(s => s.trim())
+                .filter(Boolean)
+                .filter(s => /^[A-Za-z0-9._]+$/.test(s));
+        }
+
+        function uniqueSorted(list) {
+            return [...new Set(list)].sort((a, b) => a.localeCompare(b));
+        }
+
+        function escapeSingleQuotes(text) {
+            return text.replace(/'/g, `'\\''`);
+        }
+
+        function escapeHtml(text) {
+            return (text || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function packageToDisplayName(appId) {
+            if (APP_NAME_HINTS[appId]) return APP_NAME_HINTS[appId];
+
+            const tail = (appId.split('.').pop() || appId)
+                .replace(/[_-]+/g, ' ')
+                .replace(/([a-z])([A-Z])/g, '$1 $2')
+                .trim();
+
+            if (!tail) return appId;
+
+            return tail
+                .split(/\s+/)
+                .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                .join(' ');
+        }
+
+        function buildAppRecords(appIds) {
+            return appIds
+                .map(id => ({ id, name: packageToDisplayName(id) }))
+                .sort((a, b) => a.name.localeCompare(b.name, 'zh-CN'));
+        }
+
+        function getAppDisplayName(appId) {
+            const found = installedApps.find(item => item.id === appId);
+            return found ? found.name : packageToDisplayName(appId);
+        }
+
+        function setWhitelistStatus(message, isError = false) {
+            const node = document.getElementById('gpu_whitelist_status');
+            if (!node) return;
+            node.textContent = message;
+            node.classList.toggle('error', isError);
+        }
+
+        function renderWhitelistSummary() {
+            const node = document.getElementById('gpu_whitelist_summary');
+            if (!node) return;
+            node.textContent = `已授权 ${gpuWhitelist.length} 个应用使用 GPU 高性能策略`;
+        }
+
+        function renderAppPermissionList(keyword = '') {
+            const listNode = document.getElementById('app_permission_list');
+            if (!listNode) return;
+
+            const query = keyword.trim().toLowerCase();
+            const filtered = installedApps.filter(app => {
+                if (!query) return true;
+                return app.name.toLowerCase().includes(query) || app.id.toLowerCase().includes(query);
+            });
+
+            if (filtered.length === 0) {
+                listNode.innerHTML = '<div class="app-row"><div class="app-main"><span class="app-name">未找到匹配应用</span><span class="app-id">可尝试刷新列表或更换关键词</span></div></div>';
+                return;
+            }
+
+            listNode.innerHTML = filtered
+                .map(app => {
+                    const checked = gpuWhitelist.includes(app.id) ? 'checked' : '';
+                    return `
+                        <label class="app-row">
+                            <div class="app-main">
+                                <span class="app-name">${escapeHtml(app.name)}</span>
+                                <span class="app-id">ID: ${escapeHtml(app.id)}</span>
+                            </div>
+                            <input class="app-check" type="checkbox" data-app-id="${escapeHtml(app.id)}" ${checked}>
+                        </label>
+                    `;
+                })
+                .join('');
+        }
+
+        async function loadInstalledApps() {
+            const result = await runShell('(pm list packages -3 2>/dev/null || pm list packages 2>/dev/null) | cut -d: -f2');
+            const appIds = uniqueSorted(normalizePackageList(result.stdout));
+            installedApps = buildAppRecords(appIds);
+            renderAppPermissionList(document.getElementById('app_search')?.value || '');
+
+            if (installedApps.length === 0) {
+                setWhitelistStatus('未读取到应用列表，请确认 root 环境可用。', true);
+            }
+        }
+
+        async function loadGpuWhitelist() {
+            const result = await runShell(`if [ -f "${GPU_WHITELIST_FILE}" ]; then cat "${GPU_WHITELIST_FILE}"; else echo "__NO_FILE__"; fi`);
+            const marker = (result.stdout || '').trim();
+
+            if (marker === '__NO_FILE__') {
+                gpuWhitelist = [...DEFAULT_GPU_WHITELIST];
+            } else {
+                gpuWhitelist = uniqueSorted(normalizePackageList(result.stdout));
+            }
+
+            renderWhitelistSummary();
+            renderAppPermissionList(document.getElementById('app_search')?.value || '');
+        }
+
+        async function saveGpuWhitelist(autoSave = false) {
+            document.getElementById('loading').style.display = 'block';
+            const payload = gpuWhitelist.join('\n');
+            const escaped = escapeSingleQuotes(payload);
+
+            let cmd = `mkdir -p "${CONF_DIR}" && `;
+            if (gpuWhitelist.length > 0) {
+                cmd += `printf '%s\\n' '${escaped}' > "${GPU_WHITELIST_FILE}"`;
+            } else {
+                cmd += `: > "${GPU_WHITELIST_FILE}"`;
+            }
+            cmd += ` && sh "${MOD_DIR}/service.sh" update`;
+
+            const result = await runShell(cmd);
+            document.getElementById('loading').style.display = 'none';
+
+            if (result.errno === 0) {
+                renderWhitelistSummary();
+                if (autoSave) {
+                    setWhitelistStatus(`已自动保存，当前授权 ${gpuWhitelist.length} 个应用。`);
+                } else {
+                    setWhitelistStatus(`已保存并生效，当前授权 ${gpuWhitelist.length} 个应用。`);
+                }
+            } else {
+                setWhitelistStatus(`保存失败：${result.stderr || '未知错误'}`, true);
+            }
+        }
+
+        function bindWhitelistEvents() {
+            const searchInput = document.getElementById('app_search');
+            const refreshBtn = document.getElementById('btn_refresh_apps');
+            const saveBtn = document.getElementById('btn_save_whitelist');
+            const listNode = document.getElementById('app_permission_list');
+
+            if (!searchInput || !refreshBtn || !saveBtn || !listNode) return;
+
+            searchInput.addEventListener('input', () => {
+                renderAppPermissionList(searchInput.value);
+            });
+
+            refreshBtn.addEventListener('click', async () => {
+                setWhitelistStatus('正在刷新应用列表...');
+                await loadInstalledApps();
+                setWhitelistStatus(`已加载 ${installedApps.length} 个应用。`);
+            });
+
+            saveBtn.addEventListener('click', async () => {
+                await saveGpuWhitelist(false);
+            });
+
+            listNode.addEventListener('change', async (event) => {
+                const input = event.target;
+                if (!input || !input.classList || !input.classList.contains('app-check')) return;
+
+                const appId = input.getAttribute('data-app-id');
+                if (!appId) return;
+
+                if (input.checked) {
+                    gpuWhitelist = uniqueSorted(gpuWhitelist.concat(appId));
+                    setWhitelistStatus(`已授权 ${getAppDisplayName(appId)}，正在自动保存...`);
+                } else {
+                    gpuWhitelist = gpuWhitelist.filter(item => item !== appId);
+                    setWhitelistStatus(`已取消授权 ${getAppDisplayName(appId)}，正在自动保存...`);
+                }
+
+                renderWhitelistSummary();
+                await saveGpuWhitelist(true);
+            });
+        }
+
+        // 初始化加载状态
+        async function fetchStatus() {
+            await fetchToggles();
+            await loadGpuWhitelist();
+            await loadInstalledApps();
+            renderWhitelistSummary();
+            setWhitelistStatus(`已加载 ${installedApps.length} 个应用。`);
+        }
+
+        async function fetchToggles() {
+            const inputs = document.querySelectorAll('input[type="checkbox"]');
+            for (let input of inputs) {
+                const flagFile = input.getAttribute('data-flag');
+                const result = await runShell(`[ -f "${CONF_DIR}/${flagFile}" ] && echo "ON" || echo "OFF"`);
+                // 仅当结果明确为 ON 时才开启，以防空命令导致全关
+                if (result.stdout) {
+                    input.checked = (result.stdout.trim() === 'ON');
+                }
+            }
+
+            // 获取当前真实的 TCP 算法，用作文字旁注展示
+            const algoResult = await runShell('cat /proc/sys/net/ipv4/tcp_congestion_control');
+            if (algoResult.stdout) {
+                const algoText = algoResult.stdout.trim().toUpperCase();
+                document.getElementById('current_algo_text').innerText = `[当前: ${algoText}]`;
+            }
+
+            // 获取 GPU 是否出于解锁激活状态
+            const gpuResult = await runShell('cat /sys/class/devfreq/13040000.mali/governor 2>/dev/null || cat /sys/devices/platform/13040000.mali/devfreq/13040000.mali/governor 2>/dev/null');
+            if (gpuResult.stdout) {
+                const curGov = gpuResult.stdout.trim();
+                let govText = '省电中';
+                if (curGov !== 'dummy' && curGov !== '') govText = '火力接管中';
+                document.getElementById('current_gpu_text').innerText = `[状态: ${govText}]`;
+            }
+        }
+
+        // 绑定切换事件
+        document.querySelectorAll('input[type="checkbox"]').forEach(input => {
+            input.addEventListener('change', async (e) => {
+                const isChecked = e.target.checked;
+                const flagFile = e.target.getAttribute('data-flag');
+
+                document.getElementById('loading').style.display = 'block';
+
+                let cmd = '';
+                if (isChecked) {
+                    // 对于 BBR 和其他通用功能，开启=创建文件并触发刷新
+                    cmd = `mkdir -p ${CONF_DIR} && touch ${CONF_DIR}/${flagFile} && sh ${MOD_DIR}/service.sh update`;
+                } else {
+                    // 关闭=移除文件并触发刷新
+                    cmd = `rm -f ${CONF_DIR}/${flagFile} && sh ${MOD_DIR}/service.sh update`;
+                }
+
+                await runShell(cmd);
+
+                // 专门针对 BBR 开关，更新小文字显示
+                if (flagFile === 'enable_bbr') {
+                    await new Promise(r => setTimeout(r, 600));
+                    const algoResult = await runShell('cat /proc/sys/net/ipv4/tcp_congestion_control');
+                    if (algoResult.stdout) {
+                        const algoText = algoResult.stdout.trim().toUpperCase();
+                        document.getElementById('current_algo_text').innerText = `[当前: ${algoText}]`;
+                    }
+                }
+
+                if (flagFile === 'enable_gpu_unlock') {
+                    await new Promise(r => setTimeout(r, 600));
+                    const gpuResult = await runShell('cat /sys/class/devfreq/13040000.mali/governor 2>/dev/null || cat /sys/devices/platform/13040000.mali/devfreq/13040000.mali/governor 2>/dev/null');
+                    if (gpuResult.stdout) {
+                        const curGov = gpuResult.stdout.trim();
+                        let govText = '省电中';
+                        if (curGov !== 'dummy' && curGov !== '') govText = '火力接管中';
+                        document.getElementById('current_gpu_text').innerText = `[状态: ${govText}]`;
+                    }
+                }
+
+                document.getElementById('loading').style.display = 'none';
+            });
+        });
+
+        // 页面加载完成后获取状态
+        window.addEventListener('DOMContentLoaded', () => {
+            bindWhitelistEvents();
+            fetchStatus();
+        });
+    </script>
+</body>
+</html>
