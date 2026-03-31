@@ -1,5 +1,12 @@
 # Bluefox_NX1_optimized
 
+## 项目声明
+
+1. 本项目主要由 AI 参与生成，属于 vibe coding 产物。
+2. 本项目不参与任何商业行为，不提供商业授权与商业支持。
+3. 允许二次开发与分发，但请自行承担兼容性与使用风险。
+4. 项目代码含金量不高，更适合学习和折腾用途。
+
 一个面向 Android 热点中继场景的 KernelSU 模块，目标是：
 
 - 提升多设备并发下的网络稳定性
@@ -33,8 +40,8 @@ Bluefox_NX1_optimized/
   action.sh           # 模块动作入口，提示用户从 KernelSU WebUI 进入
   service.sh          # 核心守护脚本（每 30 秒轮询并应用策略）
   module.prop         # 模块元数据
-  build.bat           # Windows 一键打包 + 推送脚本
-  DEVLOG.md           # 开发日志与规则
+   build.bat           # Biuld and Push：打包并推送到手机，电脑端不保留 zip
+   build_release.bat   # Build：仅本地打包发布包
   webroot/
     index.html        # WebUI 前端
 ```
@@ -55,16 +62,16 @@ Bluefox_NX1_optimized/
 3. 重启设备。
 4. 进入模块的 WebUI 页面进行开关配置。
 
-### 方式 B：使用 build.bat 一键打包并推送
+### 方式 B：Biuld and Push（build.bat）
 
-`build.bat` 执行流程：
+build.bat 执行流程：
 
 1. 从 `module.prop` 读取版本号。
 2. 清理电脑目录中旧的 `Bluefox*.zip`。
 3. 打包 `module.prop`、`service.sh`、`action.sh`、`webroot`。
 4. 清理手机 `/sdcard/Download` 下旧的 `Bluefox*.zip`。
 5. 通过 ADB 推送新包到手机 Download。
-6. 推送成功后删除电脑端临时 zip，保持目录整洁。
+6. 无论推送成功或失败，都会删除电脑端临时 zip，保证执行前后电脑目录都不留 zip。
 
 ## WebUI 使用说明
 
@@ -131,11 +138,6 @@ Bluefox_NX1_optimized/
 2. 不同 ROM/内核实现有差异，部分节点可能不存在或不可写。
 3. 若 WebUI 运行在非 KernelSU 环境，命令执行会失去特权上下文。
 4. 若网络异常，建议先逐项关闭功能并回归默认，再定位具体开关。
-
-## 开发约定
-
-1. 实质性改动（功能、脚本、排障、关键配置变更）必须更新 `DEVLOG.md`。
-2. 纯问答、纯原理讨论且没有实质变更时，不强制写日志。
 
 ## 免责声明
 

@@ -3,7 +3,7 @@ chcp 65001 >nul
 setlocal enabledelayedexpansion
 
 echo =========================================
-echo 开始打包 KernelSU 模块 (Bluefox_NX1_optimized)
+echo Biuld and Push - Bluefox_NX1_optimized
 echo =========================================
 
 REM 从 module.prop 提取版本号
@@ -28,7 +28,7 @@ tar.exe -a -c -f "!ZIP_NAME!" module.prop service.sh action.sh webroot
 
 echo.
 echo =========================================
-echo 打包完成！文件已临时生成: !ZIP_NAME!
+echo 打包完成，临时文件已生成: !ZIP_NAME!
 echo =========================================
 
 echo.
@@ -39,14 +39,15 @@ echo.
 echo [ADB 推送] 正在尝试将新模块推送到手机 /sdcard/Download 目录...
 adb push "!ZIP_NAME!" /sdcard/Download/
 if !ERRORLEVEL! EQU 0 (
-    echo [✔️] 推送成功！现在你可以去手机的 KernelSU 管理器里刷入它了。
-    
-    echo [收尾] 正在删除电脑端的临时包以保持整洁...
-    del /Q "!ZIP_NAME!" 2>nul
-    echo [✔️] 清理完毕。
+    echo [OK] 推送成功，手机 Download 目录中已保留最新包。
 ) else (
-    echo [❌] 推送失败！可能是手机未连接或者未开启 USB 调试。
+    echo [ERR] 推送失败，可能是手机未连接或未开启 USB 调试。
 )
+
+echo.
+echo [收尾] 删除电脑端临时 zip，确保执行前后本地不留包...
+del /Q "!ZIP_NAME!" 2>nul
+echo [OK] 电脑端清理完成。
 
 echo.
 pause
