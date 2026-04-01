@@ -1,6 +1,6 @@
 id=Bluefox_NX1_optimized
 name=Bluefox_NX1_optimized
-version=v1.3
-versionCode=4
+version=v1.4
+versionCode=5
 author=Piereacy
 description=全功能极简直装版保护模块：包含网络并发出列、Awake防断流、ZeroScan与BBR抢占模式。已新增 G81 GPU 防掉帧白名单。

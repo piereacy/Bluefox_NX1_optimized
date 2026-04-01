@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>蓝狐网络中继优化</title>
+    <title>Bluefox_NX1_optimized</title>
     <style>
         :root {
             --md-sys-color-primary: #006493;
@@ -79,6 +79,16 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+        }
+
+        .feature-card {
+            transition: all 0.2s ease-out;
+            cursor: pointer;
+        }
+
+        .feature-card:active {
+            transform: scale(0.98);
+            background-color: var(--md-sys-color-surface-variant);
         }
 
         .card-content {
@@ -245,12 +255,26 @@
             cursor: pointer;
             background-color: var(--md-sys-color-surface);
             color: var(--md-sys-color-on-surface);
+            transition: all 0.2s ease-out;
+        }
+
+        .btn:active {
+            transform: scale(0.92);
+            opacity: 0.8;
+            background-color: var(--md-sys-color-surface-variant);
         }
 
         .btn.primary {
             background-color: var(--md-sys-color-primary);
             color: var(--md-sys-color-on-primary);
             border-color: var(--md-sys-color-primary);
+        }
+
+        .btn.active-toggle {
+            background-color: var(--md-sys-color-primary);
+            color: var(--md-sys-color-on-primary);
+            border-color: var(--md-sys-color-primary);
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
         }
 
         .app-list {
@@ -271,6 +295,11 @@
             padding: 12px;
             border-bottom: 1px solid var(--md-sys-color-surface-variant);
             cursor: pointer;
+            transition: background-color 0.2s ease-out;
+        }
+
+        .app-row:active {
+            background-color: var(--md-sys-color-surface-variant);
         }
 
         .app-row:last-child {
@@ -287,19 +316,18 @@
         .app-name {
             font-size: 14px;
             color: var(--md-sys-color-on-surface);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            max-width: 340px;
+            word-break: break-word;
+            white-space: normal;
+            line-height: 1.2;
         }
 
         .app-id {
-            font-size: 12px;
+            font-size: 11px;
             color: var(--md-sys-color-on-surface-variant);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            max-width: 340px;
+            word-break: break-all;
+            white-space: normal;
+            line-height: 1.2;
+            margin-top: 2px;
         }
 
         .app-check {
@@ -313,113 +341,109 @@
 <body>
 
     <div class="header">
-        <h1 class="title">网络中继优化</h1>
-        <p class="subtitle">v1.2</p>
+        <h1 class="title">设置</h1>
+        <p class="subtitle">Bluefox_NX1_optimized v1.4</p>
     </div>
 
     <div class="container">
         <!-- Backlog Toggle -->
-        <div class="card" onclick="document.getElementById('toggle_backlog').click()">
+        <div class="card feature-card" onclick="document.getElementById('toggle_backlog').click()">
             <div class="card-content">
                 <h3 class="card-title">Backlog 4096</h3>
                 <p class="card-desc">TCP并发列队优化，解决中继多设备高并发网络阻塞</p>
             </div>
             <label class="switch" onclick="event.stopPropagation()">
-                <input type="checkbox" id="toggle_backlog" data-flag="enable_backlog">
+                <input type="checkbox" class="feature-toggle" id="toggle_backlog" data-flag="enable_backlog">
                 <span class="slider"></span>
             </label>
         </div>
 
         <!-- Awake Toggle -->
-        <div class="card" onclick="document.getElementById('toggle_awake').click()">
+        <div class="card feature-card" onclick="document.getElementById('toggle_awake').click()">
             <div class="card-content">
                 <h3 class="card-title">Awake 休眠锁</h3>
                 <p class="card-desc">防止手机息屏后 Wi-Fi 芯片进入低功耗导致断流降速</p>
             </div>
             <label class="switch" onclick="event.stopPropagation()">
-                <input type="checkbox" id="toggle_awake" data-flag="enable_awake">
+                <input type="checkbox" class="feature-toggle" id="toggle_awake" data-flag="enable_awake">
                 <span class="slider"></span>
             </label>
         </div>
 
         <!-- ZeroScan Toggle -->
-        <div class="card" onclick="document.getElementById('toggle_zeroscan').click()">
+        <div class="card feature-card" onclick="document.getElementById('toggle_zeroscan').click()">
             <div class="card-content">
                 <h3 class="card-title">ZeroScan 零扫描</h3>
                 <p class="card-desc">禁用 Wi-Fi 后台扫描，杜绝中继网络周期性跳Ping与卡顿</p>
             </div>
             <label class="switch" onclick="event.stopPropagation()">
-                <input type="checkbox" id="toggle_zeroscan" data-flag="enable_zeroscan">
+                <input type="checkbox" class="feature-toggle" id="toggle_zeroscan" data-flag="enable_zeroscan">
                 <span class="slider"></span>
             </label>
         </div>
 
         <!-- Proxy Toggle -->
-        <div class="card" onclick="document.getElementById('toggle_proxy').click()">
+        <div class="card feature-card" onclick="document.getElementById('toggle_proxy').click()">
             <div class="card-content">
                 <h3 class="card-title">代理接管 (Tethering)</h3>
                 <p class="card-desc">强制热点流量通过本地 VPN/代理接口，实现无感翻墙加速</p>
             </div>
             <label class="switch" onclick="event.stopPropagation()">
-                <input type="checkbox" id="toggle_proxy" data-flag="enable_proxy">
+                <input type="checkbox" class="feature-toggle" id="toggle_proxy" data-flag="enable_proxy">
                 <span class="slider"></span>
             </label>
         </div>
 
         <!-- DNS Purify Toggle -->
-        <div class="card" onclick="document.getElementById('toggle_dns').click()">
+        <div class="card feature-card" onclick="document.getElementById('toggle_dns').click()">
             <div class="card-content">
                 <h3 class="card-title">DNS 净化劫持</h3>
                 <p class="card-desc">拦截中继设备 53 端口，强制重定向至阿里纯净 DNS 防污染</p>
             </div>
             <label class="switch" onclick="event.stopPropagation()">
-                <input type="checkbox" id="toggle_dns" data-flag="enable_dns">
+                <input type="checkbox" class="feature-toggle" id="toggle_dns" data-flag="enable_dns">
                 <span class="slider"></span>
             </label>
         </div>
 
         <!-- TCP Algo Toggle -->
-        <div class="card" onclick="document.getElementById('toggle_bbr').click()">
+        <div class="card feature-card" onclick="document.getElementById('toggle_bbr').click()">
             <div class="card-content">
                 <h3 class="card-title">BBR 抢占模式 <span class="algo-status" id="current_algo_text"></span></h3>
                 <p class="card-desc">开启为 BBR，关闭即回退为温和的 Cubic 算法。切换后需重新开关一次手机热点方可全局生效。</p>
             </div>
             <label class="switch" onclick="event.stopPropagation()">
-                <input type="checkbox" id="toggle_bbr" data-flag="enable_bbr">
+                <input type="checkbox" class="feature-toggle" id="toggle_bbr" data-flag="enable_bbr">
                 <span class="slider"></span>
             </label>
         </div>
 
-        <!-- GPU Unlock Toggle -->
-        <div class="card" onclick="document.getElementById('toggle_gpu_unlock').click()">
-            <div class="card-content">
-                <h3 class="card-title">GPU 脱僵白名单 (防掉帧) <span class="algo-status" style="color:red;" id="current_gpu_text"></span></h3>
-                <p class="card-desc">剥夺原生傀儡调度器(Dummy)，拦截PPM联发科温控微操。采用白名单智能激活机制，无白名单应用运行时自动沉睡回省电状态。不超频，最高极值重置为900M，稳帧防黑砖。</p>
+        <!-- GPU Unlock & Whitelist Manager (Combined) -->
+        <div class="card card-stack" style="padding: 0; overflow: hidden;">
+            <div class="feature-card" style="display: flex; justify-content: space-between; align-items: center; padding: 16px;" onclick="document.getElementById('toggle_gpu_unlock').click()">
+                <div class="card-content" style="padding: 0;">
+                    <h3 class="card-title">GPU 脱僵白名单 (防掉帧) <span class="algo-status" style="color:red;" id="current_gpu_text"></span></h3>
+                    <p class="card-desc">剥夺原生傀儡调度器(Dummy)，拦截PPM联发科温控微操。采用白名单智能激活机制，无白名单应用运行时自动沉睡回省电状态。不超频，最高极值重置为900M,略微提高一点点性能(仅推荐把刚需性能的游戏加入白名单)。</p>
+                </div>
+                <label class="switch" onclick="event.stopPropagation()">
+                    <input type="checkbox" class="feature-toggle" id="toggle_gpu_unlock" data-flag="enable_gpu_unlock">
+                    <span class="slider"></span>
+                </label>
             </div>
-            <label class="switch" onclick="event.stopPropagation()">
-                <input type="checkbox" id="toggle_gpu_unlock" data-flag="enable_gpu_unlock">
-                <span class="slider"></span>
-            </label>
-        </div>
 
-        <!-- GPU Whitelist Manager -->
-        <div class="card card-stack">
-            <div class="card-content" style="padding-right:0;">
-                <h3 class="card-title">GPU 白名单权限</h3>
-                <p class="card-desc">勾选应用使其加入白名单，取消勾选即移除。</p>
+            <div class="card-content" style="padding: 16px; padding-top: 0;">
+                <hr style="border: none; border-top: 1px solid var(--md-sys-color-surface-variant); margin: 0 0 16px 0;">
+                <p class="card-desc">勾选下方应用使其加入白名单，取消勾选即移除。</p>
                 <p class="status-text" id="gpu_whitelist_summary"></p>
                 <p class="status-text" id="gpu_whitelist_status"></p>
 
                 <div class="whitelist-toolbar">
-                    <input type="text" class="text-input" id="app_search" placeholder="搜索应用名称">
-                    <button type="button" class="btn" id="btn_refresh_apps">刷新应用列表</button>
+                    <input type="text" class="text-input" id="app_search" placeholder="本地过滤包名或拼音 (如 tencent)">
+                    <button type="button" class="btn" id="btn_toggle_whitelisted">仅看已选</button>
+                    <button type="button" class="btn" id="btn_refresh_apps">重载所有列表</button>
                 </div>
 
                 <div id="app_permission_list" class="app-list"></div>
-
-                <div class="actions">
-                    <button type="button" class="btn primary" id="btn_save_whitelist">手动保存并立即生效</button>
-                </div>
             </div>
         </div>
 
@@ -429,13 +453,10 @@
 
     <script>
         const MOD_DIR = '/data/adb/modules/Bluefox_NX1_optimized';
-        const CONF_DIR = `${MOD_DIR}/conf`;
+        const CONF_DIR = '/data/adb/Bluefox_NX1_optimized_conf';
         const GPU_WHITELIST_FILE = `${CONF_DIR}/gpu_whitelist.txt`;
-        const DEFAULT_GPU_WHITELIST = [
-            'com.tencent.tmgp.roco',
-            'com.tencent.tmgp.sgame',
-            'com.miHoYo.Yuanshen'
-        ];
+        const DEFAULT_GPU_WHITELIST = [];
+        // 定义部分常见游戏的中文本地化别名，如果在列表中遇到会优先展示
         const APP_NAME_HINTS = {
             'com.tencent.tmgp.roco': '洛克王国：世界',
             'com.tencent.tmgp.sgame': '王者荣耀',
@@ -444,28 +465,79 @@
 
         let installedApps = [];
         let gpuWhitelist = [...DEFAULT_GPU_WHITELIST];
+        let showOnlyWhitelisted = false;
+
+        function normalizeExecResult(raw) {
+            let parsed = raw;
+            if (typeof parsed === 'string') {
+                try {
+                    parsed = JSON.parse(parsed);
+                } catch (e) {
+                    parsed = { stdout: raw };
+                }
+            }
+
+            if (parsed == null || typeof parsed !== 'object') {
+                return { errno: 0, stdout: String(raw || ''), stderr: '' };
+            }
+
+            const errno = Number(
+                parsed.errno ?? parsed.code ?? parsed.exitCode ?? parsed.exit_code ?? 0
+            );
+            const stdout = String(parsed.stdout ?? parsed.out ?? parsed.output ?? '');
+            const stderr = String(parsed.stderr ?? parsed.err ?? parsed.error ?? '');
+            return { errno, stdout, stderr };
+        }
+
+        function execWithCallback(cmd) {
+            return new Promise((resolve) => {
+                const cbName = `__ksu_cb_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+                let done = false;
+                let timer = null;
+                const finish = (result) => {
+                    if (done) return;
+                    done = true;
+                    if (timer) clearTimeout(timer);
+                    try { delete window[cbName]; } catch (_) {}
+                    resolve(normalizeExecResult(result));
+                };
+
+                window[cbName] = (errno, stdout, stderr) => finish({ errno, stdout, stderr });
+
+                timer = setTimeout(() => {
+                    finish({ errno: -1, stdout: '', stderr: '执行超时：未收到 KernelSU 回调' });
+                }, 15000);
+
+                try {
+                    window.ksu.exec(cmd, '{}', cbName);
+                } catch (e) {
+                    finish({ errno: -1, stdout: '', stderr: e && e.toString ? e.toString() : 'exec 调用失败' });
+                }
+            });
+        }
 
         // 简易内核执行封装与 API 兼容层
         async function runShell(cmd) {
             try {
-                if (typeof window.ksu !== 'undefined' && window.ksu.exec) {
-                    let res = await window.ksu.exec(cmd);
-
-                    // 兼容 KernelSU 旧版返回 JSON 字符串的场景
-                    if (typeof res === 'string') {
-                        try {
-                            res = JSON.parse(res);
-                        } catch (e) {
-                            res = { errno: 0, stdout: res, stderr: '' };
-                        }
-                    }
-                    return res || { errno: 0, stdout: '', stderr: '' };
+                if (typeof window.ksu === 'undefined' || !window.ksu.exec) {
+                    return { errno: -2, stdout: '', stderr: '未检测到 KernelSU WebUI 运行环境' };
                 }
-                console.warn('无 KernelSU 环境, 模拟执行:', cmd);
-                return { errno: 0, stdout: 'OFF', stderr: '' };
+
+                // 新版 Promise 风格
+                if (window.ksu.exec.length < 3) {
+                    const raw = await window.ksu.exec(cmd);
+                    if (typeof raw === 'undefined' || raw === null) {
+                        // 某些版本 length 不可靠，回退到回调模式再试一次
+                        return await execWithCallback(cmd);
+                    }
+                    return normalizeExecResult(raw);
+                }
+
+                // 旧版回调风格
+                return await execWithCallback(cmd);
             } catch (err) {
                 console.error('执行出错:', err);
-                return { errno: -1, stdout: '', stderr: err.toString() };
+                return { errno: -1, stdout: '', stderr: err && err.toString ? err.toString() : '未知错误' };
             }
         }
 
@@ -540,6 +612,7 @@
 
             const query = keyword.trim().toLowerCase();
             const filtered = installedApps.filter(app => {
+                if (showOnlyWhitelisted && !gpuWhitelist.includes(app.id)) return false;
                 if (!query) return true;
                 return app.name.toLowerCase().includes(query) || app.id.toLowerCase().includes(query);
             });
@@ -566,13 +639,55 @@
         }
 
         async function loadInstalledApps() {
-            const result = await runShell('(pm list packages -3 2>/dev/null || pm list packages 2>/dev/null) | cut -d: -f2');
-            const appIds = uniqueSorted(normalizePackageList(result.stdout));
+            let appSet = new Set();
+            
+            // 1. KSU Native 工具 (如果内核/WebUI版本支持)
+            if (typeof window.ksu !== 'undefined' && typeof window.ksu.listPackages === 'function') {
+                try {
+                    const raw = window.ksu.listPackages('all') || window.ksu.listPackages('user') || '[]';
+                    const packages = JSON.parse(raw);
+                    packages.forEach(item => {
+                        const name = item.packageName || item.pkgName || item.package || (typeof item === 'string' ? item : '');
+                        if (name) appSet.add(name);
+                    });
+                } catch (e) {
+                    console.warn('Native APIs error:', e);
+                }
+            }
+
+            // 2. 文件系统直扫 (最快最稳，防 pm 库或 ROM 魔改导致输出被截断为1个包)
+            const result1 = await runShell('ls -1 /data/data 2>/dev/null');
+            normalizePackageList(result1.stdout).forEach(p => appSet.add(p));
+
+            // 3. Fallback: pm 命令 (防前面扫不到系统层应用)
+            if (appSet.size === 0) {
+                const result2 = await runShell('pm list packages 2>/dev/null');
+                const clean = (result2.stdout || '').replace(/package:/g, '');
+                normalizePackageList(clean).forEach(p => appSet.add(p));
+            }
+
+            if (Array.isArray(gpuWhitelist)) { gpuWhitelist.forEach(p => appSet.add(p)); }
+
+            let appIds = uniqueSorted(Array.from(appSet));
+            
+            // 加入屏蔽词过滤，剔除包含特定关键词的系统库和框架包名
+            const blocklist = ['android', 'mediatek', 'qualcomm', 'google', 'coloros', 'oplus', 'heytap', 'xiaomi', 'miui', 'vivo', 'bbk', 'huawei', 'honor'];
+            appIds = appIds.filter(id => {
+                // 如果本应用已经被用户勾选保存在白名单里了，则无论叫什么名字都必须放行显示，否则用户将无法取消勾选产生“幽灵授权”
+                if (gpuWhitelist.includes(id)) return true;
+                
+                const idLower = id.toLowerCase();
+                // 否则，如果包名包含上述任意屏蔽词，则过滤掉
+                return !blocklist.some(keyword => idLower.includes(keyword));
+            });
+
             installedApps = buildAppRecords(appIds);
-            renderAppPermissionList(document.getElementById('app_search')?.value || '');
+            
+            const searchInput = document.getElementById('app_search');
+            renderAppPermissionList(searchInput ? searchInput.value : '');
 
             if (installedApps.length === 0) {
-                setWhitelistStatus('未读取到应用列表，请确认 root 环境可用。', true);
+                setWhitelistStatus(`未读取到应用列表，当前运行环境受限。`, true);
             }
         }
 
@@ -590,29 +705,22 @@
             renderAppPermissionList(document.getElementById('app_search')?.value || '');
         }
 
-        async function saveGpuWhitelist(autoSave = false) {
+        async function saveGpuWhitelist() {
             document.getElementById('loading').style.display = 'block';
-            const payload = gpuWhitelist.join('\n');
-            const escaped = escapeSingleQuotes(payload);
 
-            let cmd = `mkdir -p "${CONF_DIR}" && `;
+            let cmd = `mkdir -p "${CONF_DIR}" && rm -f "${GPU_WHITELIST_FILE}" && touch "${GPU_WHITELIST_FILE}"`;
             if (gpuWhitelist.length > 0) {
-                cmd += `printf '%s\\n' '${escaped}' > "${GPU_WHITELIST_FILE}"`;
-            } else {
-                cmd += `: > "${GPU_WHITELIST_FILE}"`;
+                const safeList = gpuWhitelist.map(escapeSingleQuotes).join(' ');
+                cmd += ` && for app in ${safeList}; do echo "$app" >> "${GPU_WHITELIST_FILE}"; done`;
             }
             cmd += ` && sh "${MOD_DIR}/service.sh" update`;
-
+            
             const result = await runShell(cmd);
             document.getElementById('loading').style.display = 'none';
 
             if (result.errno === 0) {
                 renderWhitelistSummary();
-                if (autoSave) {
-                    setWhitelistStatus(`已自动保存，当前授权 ${gpuWhitelist.length} 个应用。`);
-                } else {
-                    setWhitelistStatus(`已保存并生效，当前授权 ${gpuWhitelist.length} 个应用。`);
-                }
+                setWhitelistStatus(`已自动保存，当前授权 ${gpuWhitelist.length} 个应用。`);
             } else {
                 setWhitelistStatus(`保存失败：${result.stderr || '未知错误'}`, true);
             }
@@ -620,24 +728,36 @@
 
         function bindWhitelistEvents() {
             const searchInput = document.getElementById('app_search');
+            const toggleFilterBtn = document.getElementById('btn_toggle_whitelisted');
             const refreshBtn = document.getElementById('btn_refresh_apps');
-            const saveBtn = document.getElementById('btn_save_whitelist');
             const listNode = document.getElementById('app_permission_list');
 
-            if (!searchInput || !refreshBtn || !saveBtn || !listNode) return;
+            if (!refreshBtn || !listNode) return;
 
-            searchInput.addEventListener('input', () => {
-                renderAppPermissionList(searchInput.value);
-            });
+            if (toggleFilterBtn) {
+                toggleFilterBtn.addEventListener('click', () => {
+                    showOnlyWhitelisted = !showOnlyWhitelisted;
+                    if (showOnlyWhitelisted) {
+                        toggleFilterBtn.classList.add('active-toggle');
+                    } else {
+                        toggleFilterBtn.classList.remove('active-toggle');
+                    }
+                    renderAppPermissionList(searchInput ? searchInput.value : '');
+                });
+            }
+
+            if (searchInput) {
+                searchInput.addEventListener('input', () => {
+                    renderAppPermissionList(searchInput.value);
+                });
+            }
 
             refreshBtn.addEventListener('click', async () => {
+                refreshBtn.disabled = true;
                 setWhitelistStatus('正在刷新应用列表...');
                 await loadInstalledApps();
                 setWhitelistStatus(`已加载 ${installedApps.length} 个应用。`);
-            });
-
-            saveBtn.addEventListener('click', async () => {
-                await saveGpuWhitelist(false);
+                refreshBtn.disabled = false;
             });
 
             listNode.addEventListener('change', async (event) => {
@@ -656,7 +776,7 @@
                 }
 
                 renderWhitelistSummary();
-                await saveGpuWhitelist(true);
+                await saveGpuWhitelist();
             });
         }
 
@@ -670,7 +790,7 @@
         }
 
         async function fetchToggles() {
-            const inputs = document.querySelectorAll('input[type="checkbox"]');
+            const inputs = document.querySelectorAll('.feature-toggle[data-flag]');
             for (let input of inputs) {
                 const flagFile = input.getAttribute('data-flag');
                 const result = await runShell(`[ -f "${CONF_DIR}/${flagFile}" ] && echo "ON" || echo "OFF"`);
@@ -685,6 +805,11 @@
             if (algoResult.stdout) {
                 const algoText = algoResult.stdout.trim().toUpperCase();
                 document.getElementById('current_algo_text').innerText = `[当前: ${algoText}]`;
+                
+                // 【修复逻辑】：如果系统内核真正跑在 BBR，应该让开关处于开启状态反馈给用户
+                if (algoText === 'BBR') {
+                    document.getElementById('toggle_bbr').checked = true;
+                }
             }
 
             // 获取 GPU 是否出于解锁激活状态
@@ -698,7 +823,7 @@
         }
 
         // 绑定切换事件
-        document.querySelectorAll('input[type="checkbox"]').forEach(input => {
+        document.querySelectorAll('.feature-toggle[data-flag]').forEach(input => {
             input.addEventListener('change', async (e) => {
                 const isChecked = e.target.checked;
                 const flagFile = e.target.getAttribute('data-flag');
@@ -742,9 +867,16 @@
         });
 
         // 页面加载完成后获取状态
-        window.addEventListener('DOMContentLoaded', () => {
+        window.addEventListener('DOMContentLoaded', async () => {
+            // 使得 iOS/部分 Android 原生 Webview 的 CSS :active 触控动画能够立即生效
+            document.body.addEventListener('touchstart', function() {}, {passive: true});
+            
             bindWhitelistEvents();
-            fetchStatus();
+            try {
+                await fetchStatus();
+            } catch (e) {
+                setWhitelistStatus(`初始化失败：${e && e.toString ? e.toString() : '未知错误'}`, true);
+            }
         });
     </script>
 </body>

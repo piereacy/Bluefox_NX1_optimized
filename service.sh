@@ -1,10 +1,10 @@
 #!/system/bin/sh
 MODDIR=${0%/*}
-CONF_DIR="$MODDIR/conf"
+CONF_DIR="/data/adb/Bluefox_NX1_optimized_conf"
 GPU_WHITELIST_FILE="$CONF_DIR/gpu_whitelist.txt"
-DEFAULT_GPU_WHITELIST="com.tencent.tmgp.roco com.tencent.tmgp.sgame com.miHoYo.Yuanshen"
+DEFAULT_GPU_WHITELIST=""
 
-# 确保配置目录存在 (用于WebUI和内核脚本的文件通信)
+# 确保持久化配置目录存在 (用于WebUI和内核脚本的文件通信)
 mkdir -p "$CONF_DIR"
 
 # 等待系统完全启动
@@ -117,13 +117,33 @@ is_gpu_whitelisted() {
     [ -z "$pkg" ] && return 1
 
     if [ -f "$GPU_WHITELIST_FILE" ]; then
-        grep -Fxq "$pkg" "$GPU_WHITELIST_FILE" 2>/dev/null
+        # 兼容 CRLF 文件，避免 Windows 写入导致匹配失败
+        tr -d '\r' < "$GPU_WHITELIST_FILE" | grep -Fxq "$pkg" 2>/dev/null
         return $?
     fi
 
     for item in $DEFAULT_GPU_WHITELIST; do
         [ "$pkg" = "$item" ] && return 0
     done
+    return 1
+}
+
+# 获取当前前台应用包名（兼容不同 Android 版本 dumpsys 输出）
+get_foreground_pkg() {
+    local line pkg
+
+    line=$(dumpsys window windows 2>/dev/null | grep -m 1 -E 'mCurrentFocus|mFocusedApp')
+    if [ -n "$line" ]; then
+        pkg=$(echo "$line" | sed -n 's/.* \([A-Za-z0-9_.]\+\)\/[A-Za-z0-9_.$]\+.*/\1/p')
+        [ -n "$pkg" ] && echo "$pkg" && return 0
+    fi
+
+    line=$(dumpsys activity activities 2>/dev/null | grep -m 1 -E 'topResumedActivity|mResumedActivity')
+    if [ -n "$line" ]; then
+        pkg=$(echo "$line" | sed -n 's/.* \([A-Za-z0-9_.]\+\)\/[A-Za-z0-9_.$]\+.*/\1/p')
+        [ -n "$pkg" ] && echo "$pkg" && return 0
+    fi
+
     return 1
 }
 
@@ -140,14 +160,15 @@ apply_gpu_unlock() {
 
     # 查阅是否激活了性能解锁白名单
     if [ -f "$CONF_DIR/enable_gpu_unlock" ]; then
-        # 读取当前运行的最顶层包名 (dumpsys window | grep mCurrentFocus)
-        local top_app=$(dumpsys window | grep mCurrentFocus | awk -F'/' '{print $1}' | awk -F' ' '{print $NF}')
+        # 读取当前运行的最顶层包名
+        local top_app
+        top_app=$(get_foreground_pkg)
         
         # 使用配置文件白名单（不存在时回退到内置默认名单）
         if is_gpu_whitelisted "$top_app"; then
             # 如果当前是傀儡调度，则替换并强开 PPM 温控拦截
             local cur_gov=$(cat "$devfreq_gov" 2>/dev/null)
-            if [ "$cur_gov" = "dummy" ] || [ "$cur_gov" != "performance" ]; then
+            if [ "$cur_gov" != "performance" ]; then
                 # 关闭联发科的 PPM, 防止其强行微调锁频
                 if [ -d "/proc/ppm" ]; then
                     echo 0 > /proc/ppm/enabled 2>/dev/null

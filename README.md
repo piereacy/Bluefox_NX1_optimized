@@ -28,20 +28,16 @@
    - 将 53 端口流量重定向到 223.5.5.5。
 6. BBR 抢占模式
    - BBR / Cubic 切换（切换后需重新开关一次热点使全量连接生效）。
-7. GPU 脱僵白名单
-   - 仅对白名单应用激活高性能 GPU 策略，日常自动回到省电策略。
-8. 图形化白名单权限列表
-   - 在 WebUI 勾选应用即可加入白名单，取消勾选即移除。
+7. GPU 脱僵白名单与权限管理
+   - 在 WebUI 勾选应用即可加入白名单，仅对白名单应用激活高性能 GPU 策略，日常自动回到省电策略。
 
 ## 项目结构
 
 ```text
 Bluefox_NX1_optimized/
-  action.sh           # 模块动作入口，提示用户从 KernelSU WebUI 进入
   service.sh          # 核心守护脚本（每 30 秒轮询并应用策略）
   module.prop         # 模块元数据
-   build.bat           # Biuld and Push：打包并推送到手机，电脑端不保留 zip
-   build_release.bat   # Build：仅本地打包发布包
+  build.py            # 跨平台构建与推送脚本 (取代原有的 bat)
   webroot/
     index.html        # WebUI 前端
 ```
@@ -50,32 +46,27 @@ Bluefox_NX1_optimized/
 
 1. Android 设备，已获取 root。
 2. 已安装 KernelSU，且支持模块 WebUI。
-3. 设备具备基础命令能力：`sh`、`pm`、`settings`、`iptables`、`dumpsys`。
-4. Windows 侧构建与推送需要可用的 `adb` 和 `tar.exe`。
+3. 设备具备基础命令能力：`sh`、`pm`、`settings`、`iptables`、`dumpsys`。        
+4. 电脑端需要安装 Python 3 环境，构建与推送需要可用的 `adb`。
 
 ## 安装与使用
 
 ### 方式 A：KernelSU 管理器直接刷入
 
-1. 从 release 下载模块 zip。
-2. 在 KernelSU 管理器中安装模块。
+1. 从本仓库的 Releases 页面下载编译好的模块 zip 压缩包。
+2. 在 KernelSU 管理器中安装该 zip 模块。
 3. 重启设备。
 4. 进入模块的 WebUI 页面进行开关配置。
 
-### 方式 B：Build and Push（build.bat）
+### 方式 B：使用 Python 脚本构建与推送（build.py）
 
-build.bat 执行流程：
+`build.py` 执行流程（支持全平台）：
 
-1. 从 `module.prop` 读取版本号。
-2. 清理电脑目录中旧的 `Bluefox*.zip`。
-3. 打包 `module.prop`、`service.sh`、`action.sh`、`webroot`。
-4. 清理手机 `/sdcard/Download` 下旧的 `Bluefox*.zip`。
-5. 通过 ADB 推送新包到手机 Download。
-6. 无论推送成功或失败，都会删除电脑端临时 zip，保证执行前后电脑目录都不留 zip。
-
-## WebUI 使用说明
-
-进入模块 WebUI 后，可以直接操作以下开关：
+- 提供交互式菜单，可以选择：
+  1. 仅打包 Release 到电脑 `release/` 目录。
+  2. 收拾并推送到手机 `/sdcard/Download` 下并自动覆盖旧包。
+- 自动读取 `module.prop` 版本号作为压缩包名称。
+- 自动忽略不需要的开发日志和隐藏文件夹。
 
 1. Backlog 4096
 2. Awake 休眠锁
@@ -83,16 +74,9 @@ build.bat 执行流程：
 4. 代理接管
 5. DNS 净化劫持
 6. BBR 抢占模式
-7. GPU 脱僵白名单
+7. GPU 脱僵白名单 (防掉帧)
 
-### GPU 白名单权限列表
-
-1. 打开 `GPU 脱僵白名单 (防掉帧)` 开关。
-2. 在 `GPU 白名单权限` 卡片中：
-   - 搜索应用
-   - 刷新应用列表
-   - 直接勾选/取消勾选应用
-3. 勾选变化会自动保存并立即生效，也可手动点一次“保存并立即生效”。
+在 GPU 模块内：能够搜索应用、刷新列表、直接勾选/取消勾选白名单应用。每一次勾选变化会自动保存并立即生效，也可手动点一次“保存白名单并立即生效”。
 
 ## GPU 策略说明
 
@@ -105,17 +89,17 @@ build.bat 执行流程：
 
 1. 尝试关闭联发科 PPM 干预。
 2. GPU governor 切换为 `performance`。
-3. 最大频率写入 `900000000`（不追求极限超频）。
+3. 最大频率写入 `900 MHz`（不追求极限超频）。
 
 退出白名单应用后：
 
 1. 恢复 governor 为 `dummy`。
 2. 恢复 PPM。
-3. 恢复上限到 `823000000`。
+3. 恢复上限到 `823 MHz`。
 
 ## 配置文件
 
-运行时配置位于 `conf/`（由脚本自动创建）：
+运行时配置位于 `/data/adb/Bluefox_NX1_optimized_conf/`（由脚本自动在外挂目录创建以保活数据）：
 
 1. `enable_backlog`
 2. `enable_awake`
@@ -126,11 +110,7 @@ build.bat 执行流程：
 7. `enable_gpu_unlock`
 8. `gpu_whitelist.txt`（每行一个应用 ID）
 
-`gpu_whitelist.txt` 不存在时，会使用内置默认名单：
-
-- `com.tencent.tmgp.roco`
-- `com.tencent.tmgp.sgame`
-- `com.miHoYo.Yuanshen`
+`gpu_whitelist.txt` 不存在时，会使用空名单，模块首次使用时请务必进入 WebUI 中手动勾选相关应用。
 
 ## 注意事项
 
